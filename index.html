@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+        <meta name="referrer" content="no-referrer">
+        <title>P大树洞</title>
+        <meta name="description" content="pkuhole unofficial web edition" />
+        <meta name="author" content="Peng Chen" />
+        <link class="ui" href="/dist/semantic.min.css" rel="stylesheet" type="text/css" />
+        <style>
+            body {
+                background-color: DeepSkyBlue;
+            }
+            #main {
+                margin-top: 4em;
+            }
+            .ui.menu {
+                padding-left: 8%;
+                padding-right: 8%;
+            }
+            .message {
+                margin-left: auto !important;
+                margin-right: auto !important;
+                width: 80% !important;
+            }
+            .accordion {
+                background-color: White;
+                margin-top: 12px;
+                margin-bottom: 12px;
+                margin-right: 8%;
+                margin-left: 8%;
+                border: 1px solid DeepSkyBlue;
+                border-radius: 0.3rem;
+            }
+            .comment {
+                border-top: 1px solid DeepSkyBlue;
+                padding: 0.5em;
+            }
+            .title {
+                padding: 0.5em 0.5em 0 0.5em !important;
+            }
+            .timestamp {
+                float: right;
+            }
+            .navigate {
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="ui inverted menu fixed">
+            <div class="ui simple dropdown item">
+                <span id="greetingname">guest</span>
+                <div class="menu">
+                    <div class="item">
+                        <div class="ui input">
+                            <input type="text" placeholder="Username" id="username" />
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui input">
+                            <input type="password" placeholder="Password" id="password" />
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui teal button" onclick="login()">
+                            Log in
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="item">
+                        <div class="ui right action input">
+                            <input type="text" placeholder="Search..." id="keyword"/>
+                            <div class="ui teal button" id="search" onclick="search($('#keyword').val(), display); $('#page').val('');">Search</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="item">
+                        <div class="ui right action input">
+                            <input type="text" placeholder="Page or #ID" id="page"/>
+                            <div class="ui teal button" id="go" onclick="go()">Go</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="right menu">
+                <a class="item" onclick="getattention(display); $('#page').val('');">
+                    <i class="star icon"></i>
+                </a>
+                <a class="item" onclick="refresh()">
+                    <i class="home icon"></i>
+                </a>
+                <a class="item" onclick="prevpage()">
+                    <i class="chevron left icon"></i>
+                </a>
+                <a class="item" onclick="nextpage()">
+                    <i class="chevron right icon"></i>
+                </a>
+                <a class="item" href="#">
+                    <i class="chevron up icon"></i>
+                </a>
+            </div>
+        </div>
+        <div id="main">
+        </div>
+        <div id="post" style="margin-left: 8%; margin-right: 8%">
+            <div class="ui top attached tabular menu">
+                <a class="active item" data-tab="message">
+                    发表树洞
+                </a>
+                <a class="item" data-tab="comment">
+                    发表评论
+                </a>
+            </div>
+            <div class="ui bottom attached active tab segment" data-tab="message">
+                <div class="ui form">
+                    <div class="field">
+                        <label>Content</label>
+                        <textarea id="messagetext" placeholder="Content..."></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Upload Image</label>
+                        <input type="file" id="file"/>
+                    </div>
+                    <div class="field">
+                        <div class="ui teal button" onclick="dopost()">Submit</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ui bottom attached tab segment" data-tab="comment">
+                <div class="ui form">
+                    <div class="inline field">
+                        <label>#</label>
+                        <input type="text" id="commentpid" />
+                    </div>
+                    <div class="field">
+                        <label>Content</label>
+                        <textarea id="commenttext" placeholder="Content..."></textarea>
+                    </div>
+                    <div class="field">
+                        <div class="ui teal button" onclick="docomment()">Submit</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+        <script src="/dist/semantic.min.js"></script>
+        <script>
+            var page = 1;
+            var token;
+            var user_token;
+            function formatTime(timestamp){
+                var fix = function(n){ return ("00"+n).substr(-2);};
+                var date =new Date(timestamp*1000);
+                var y = date.getFullYear();
+                var mo = date.getMonth()+1;
+                var d = date.getDate();
+                var h = date.getHours();
+                var m = date.getMinutes();
+                var s = date.getSeconds();
+                var time =y+'-'+fix(mo)+'-'+fix(d)+' '+fix(h)+':'+fix(m)+':'+fix(s);
+                return time;
+            }
+            function getlist(page, action){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php?action=getlist&p="+page,
+                    type: "GET",
+                    dataType: "json",
+                    success: action
+                });
+            }
+            function getcomment(pid, action){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php?action=getcomment&pid="+pid+"&token="+token,
+                    type: "GET",
+                    dataType: "json",
+                    success: action
+                });
+            }
+            function search(keyword, action){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    data: "action=search&keywords="+encodeURIComponent(keyword)+"&pagesize=100",
+                    type: "POST",
+                    dataType: "json",
+                    success: action
+                });
+            }
+            function getone(pid, action) {
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php?action=getone&pid="+pid,
+                    type: "GET",
+                    dataType: "json",
+                    success: action
+                });
+            }
+            function loginrequest(username, password, action){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/login/login.php",
+                    data: "uid="+encodeURIComponent(username)+"&password="+encodeURIComponent(password)+"&platform=Android",
+                    type: "POST",
+                    dataType: "json",
+                    success: action
+                });
+            }
+            function getattention(action){
+                if(token == 'guest') {
+                    return;
+                }
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    data: "action=getattention&token="+token,
+                    type: "POST",
+                    dataType: "json",
+                    success: action
+                });
+            }
+            function dopost_text(text){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    data: "action=dopost&token="+token+"&type=text&text="+encodeURIComponent(text),
+                    type: "POST",
+                    dataType: "json",
+                    success: notify
+                });
+            }
+            function dopost_image(text, image){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    data: "action=dopost&token="+token+"&type=image&text="+encodeURIComponent(text)+"&data="+image,
+                    type: "POST",
+                    dataType: "json",
+                    success: notify
+                });
+            }
+            function docomment_pt(pid, text){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    data: "action=docomment&token="+token+"&pid="+pid+"&text="+encodeURIComponent(text),
+                    type: "POST",
+                    dataType: "json",
+                    success: notify
+                });
+            }
+            function setattention(pid, attention){
+                $.ajax({
+                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    data: "action=attention&pid="+pid+"&switch="+attention+"&token="+token,
+                    type: "POST",
+                    dataType: "json"
+                });
+            }
+            function insertcomment(data, pid){
+                if(data.code > 0) {
+                    return;
+                }
+                var attention = data.attention;
+                data = data.data;
+                if(data.length > 0) {
+                    var pid = data[0].pid;
+                    var frame = document.getElementById(pid);
+                    var content = document.createElement('div'); content.setAttribute("class", "content");
+                    for(var i = 0; i < data.length; i++) {
+                        var comment = document.createElement('div'); comment.setAttribute("class", "comment");
+                        var cid = "#"+data[i].cid;
+                        if(data[i].islz) {
+                            cid = cid+" [楼主]";
+                        }
+                        cid = document.createTextNode(cid);
+                        var timespan = document.createElement('span'); timespan.setAttribute("class", "timestamp");
+                        var time = document.createTextNode(formatTime(data[i].timestamp));
+                        var br = document.createElement('br');
+                        var text = document.createTextNode(data[i].text);
+                        timespan.appendChild(time);
+                        comment.appendChild(cid); comment.appendChild(timespan); comment.appendChild(br);
+                        comment.appendChild(text);
+                        content.appendChild(comment);
+                    }
+                    frame.appendChild(content);
+                }
+                if(token != 'guest' && attention) {
+                    var node = $('#'+pid+' .attention');
+                    node.text('已'+node.text());
+                }
+            }
+            function loading(){
+                var main = document.getElementById("main");
+                main.innerHTML='<div class="ui icon message"><i class="notched circle loading icon"></i><div class="content"><div class="header">Loading...</div></div></div>';
+            }
+            function display(data){
+                if (data.code > 0) {
+                    return;
+                }
+                var main = document.getElementById("main");
+                main.innerHTML="";
+                data = data.data;
+                for(var i = 0; i < data.length; i++) {
+                    var frame = document.createElement('div'); frame.setAttribute("class", "ui accordion");
+                    frame.setAttribute("id", data[i].pid);
+                    var title = document.createElement('div'); title.setAttribute("class", "title");
+                    var pid = document.createTextNode("#"+data[i].pid);
+                    var timespan = document.createElement('span'); timespan.setAttribute("class", "timestamp");
+                    var time = document.createTextNode(formatTime(data[i].timestamp));
+                    var br1 = document.createElement('br');
+                    var br2 = document.createElement('br');
+                    var text = document.createTextNode(data[i].text);
+                    var icon = document.createElement('i'); icon.setAttribute("class", "dropdown icon");
+                    var comment = document.createElement('span');
+                    comment.onclick = gotocomment;
+                    var reply = document.createTextNode("评论("+data[i].reply+")");
+                    var attention = document.createElement('span'); attention.setAttribute("class", "attention");
+                    attention.onclick = reverseattention;
+                    var likenum = document.createTextNode("关注("+data[i].likenum+")");
+                    comment.appendChild(reply); attention.appendChild(likenum);
+                    frame.appendChild(title);
+                    title.appendChild(pid); title.appendChild(timespan); title.appendChild(br1);
+                    title.appendChild(text); title.appendChild(br2);
+                    if(data[i].type == "image") {
+                        var image = document.createElement('img');
+                        image.setAttribute("class", "ui small image");
+                        image.setAttribute("src", "http://www.pkuhelper.com/services/pkuhole/images/"+data[i].url);
+                        var br = document.createElement('br');
+                        title.appendChild(image);
+                        title.appendChild(br);
+                    }
+                    if(data[i].type == "audio") {
+                        var audio = document.createElement('a');
+                        audio.setAttribute("src", "http://www.pkuhelper.com/services/pkuhole/audios/"+data[i].url);
+                        audio.setAttribute("controls", "controls");
+                        audio.setAttribute("type", "audio/amr");
+                        var br = document.createElement('br');
+                        title.appendChild(audio);
+                        title.appendChild(br);
+                    }
+                    title.appendChild(icon); title.appendChild(comment); title.appendChild(attention);
+                    timespan.appendChild(time);
+                    main.appendChild(frame);
+                    if(data[i].reply > 0 || token != 'guest') {
+                        var action = function(pid){
+                            this.f = function(e){ insertcomment(e, pid); };
+                        }
+                        getcomment(data[i].pid, (new action(data[i].pid)).f);
+                    } 
+                    if(data[i].reply == 0) {
+                        icon.setAttribute("style", "opacity: 0;");
+                    }
+                }
+                $(function(){$('.accordion').accordion();});
+                window.location.href="#";
+            }
+            function login_up(username, password){
+                if(username.toLowerCase() == 'guest'){
+                    token='guest';
+                    user_token='guest';
+                    document.getElementById("greetingname").innerText = 'Guest';
+                    return;
+                }
+                loginrequest(username, password, function(data){
+                    if(data.code > 0){
+                        alert('用户名或密码错误');
+                        return;
+                    }
+                    token = data.token;
+                    user_token = data.user_token;
+                    document.getElementById("greetingname").innerText = data.name;
+                });
+            }
+            function login(){
+                login_up($('#username').val(), $('#password').val());
+                $('#username').val('');
+                $('#password').val('');
+            }
+            function go() {
+                loading();
+                var newpage = document.getElementById("page");
+                var newvalue = newpage.value;
+                if(/^[0-9]+$/.test(newvalue) && newvalue > 0){
+                    page = newvalue;
+                    getlist(page, display);
+                }
+                else if(/^#[0-9]+$/.test(newvalue)){
+                    pid = newvalue.substr(1);
+                    getone(pid,function(data){
+                        if(data.code > 0) return;
+                        data.data = [data.data];
+                        display(data);
+                    });
+                }
+                else newpage.value = "";
+            }
+            function refresh() {
+                loading();
+                var newpage = document.getElementById("page");
+                newpage.value = "";
+                page = 1;
+                getlist(page, display);
+            }
+            function nextpage() {
+                loading();
+                page++;
+                var newpage = document.getElementById("page");
+                newpage.value = page;
+                getlist(page, display);
+            }
+            function prevpage() {
+                if(page <= 1) return;
+                loading();
+                page--;
+                var newpage = document.getElementById("page");
+                newpage.value = page;
+                getlist(page, display);
+            }
+            function gotocomment(event) {
+                var pid = event.target.parentElement.parentElement.id;
+                $('[data-tab=comment]')[0].click();
+                $('#commentpid').val(pid);
+                $('#commenttext').val('');
+                event.stopPropagation();
+                window.location.href = '#post';
+            }
+            function notify(data){
+                if( data.code == 0 ) var msg = '发送成功';
+                else var msg = '发送失败';
+                alert(msg);
+            }
+            function docomment() {
+                var pid = $('#commentpid').val();
+                var text = $('#commenttext').val();
+                if(/^[0-9]+$/.test(pid)){
+                    docomment_pt(pid, text);
+                    $('#commentpid').val('');
+                    $('#commenttext').val('');
+                }
+            }
+            function dopost() {
+                var text = $('#messagetext').val();
+                var filename = $('#file').val();
+                if(filename){
+                    var file = $('#file')[0].files[0];
+                    var reader = new FileReader();
+                    reader.onload = (function(evt) {
+                        var file = evt.target.result;
+                        var image = encodeURIComponent(btoa(file));
+                        dopost_image(text, image);
+                    })
+                    reader.readAsBinaryString(file);
+                }else{
+                    dopost_text(text);
+                }
+                $('#messagetext').val('');
+                $('#file').val('');
+            }
+            function reverseattention(e) {
+                event.stopPropagation();
+                if(token == 'guest') return;
+                var pid = $(e.target).parent().parent()[0].id;
+                getcomment(pid, function(data){
+                    var attention = data.attention;
+                    setattention(pid, 1 - attention);
+                    if(attention == 1){
+                        var msg = "成功取消关注";
+                    }else{
+                        var msg = "成功关注";
+                    }
+                    alert(msg);
+                });
+            }
+            login_up('guest','');
+            loading();
+            $('.tabular .item').tab();
+            getlist(page, display);
+        </script>
+    </body>
+</html>
+
