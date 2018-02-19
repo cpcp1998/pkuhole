@@ -488,7 +488,7 @@
             }
             function dopost() {
                 var text = $('#messagetext').val();
-                if($('#uploadimage')[0].src){
+                if($('#file').val()){
                     var url = $('#uploadimage')[0].src;
                     var image = encodeURIComponent(url.split(',')[1]);
                     dopost_image(text, image);
