@@ -122,7 +122,8 @@
                     </div>
                     <div class="field">
                         <label>Upload Image</label>
-                        <input type="file" id="file"/>
+                        <input type="file" id="file" onchange="loadimage()" />
+                        <img id="uploadimage" src="" class="ui small image"/>
                     </div>
                     <div class="field">
                         <div class="ui teal button" onclick="dopost()">Submit</div>
@@ -434,23 +435,60 @@
                     $('#commenttext').val('');
                 }
             }
-            function dopost() {
-                var text = $('#messagetext').val();
+            function loadimage(){
                 var filename = $('#file').val();
                 if(filename){
                     var file = $('#file')[0].files[0];
-                    var reader = new FileReader();
-                    reader.onload = (function(evt) {
-                        var file = evt.target.result;
-                        var image = encodeURIComponent(btoa(file));
-                        dopost_image(text, image);
-                    })
-                    reader.readAsBinaryString(file);
+                    if(file.size <= 102400){
+                        var reader = new FileReader();
+                        reader.onload = (function(evt) {
+                            var url = evt.target.result;
+                            $('#uploadimage')[0].src = url;
+                        });
+                        reader.readAsDataURL(file);
+                    }else{
+                        var reader = new FileReader();
+                        reader.onload = (function(evt) {
+                            var url = evt.target.result;
+                            var image = new Image();
+                            image.src = url;
+                            image.onload = (function(){
+                                var width = image.width;
+                                var height = image.height;
+                                if(width > 1000){
+                                    height = height * 1000 / width;
+                                    width = 1000;
+                                }
+                                if(height > 1000){
+                                    width = width * 1000 / height;
+                                    height = 1000;
+                                }
+                                var canvas = document.createElement('canvas');
+                                var context = canvas.getContext('2d');
+                                canvas.width = width;
+                                canvas.height = height;
+                                context.drawImage(image, 0, 0, width, height);
+                                $('#uploadimage')[0].src = canvas.toDataURL('image/jpeg', 0.5);
+                            });
+                        })
+                        reader.readAsDataURL(file);
+                    }
+                }else{
+                    $('#uploadimage')[0].src = '';
+                }
+            }
+            function dopost() {
+                var text = $('#messagetext').val();
+                if($('#uploadimage')[0].src){
+                    var url = $('#uploadimage')[0].src;
+                    var image = encodeURIComponent(url.split(',')[1]);
+                    dopost_image(text, image);
                 }else{
                     dopost_text(text);
                 }
                 $('#messagetext').val('');
                 $('#file').val('');
+                loadimage();
             }
             function reverseattention(e) {
                 event.stopPropagation();
