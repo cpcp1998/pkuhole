@@ -175,7 +175,7 @@
             }
             function getlist(page, action){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php?action=getlist&p="+page,
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php?action=getlist&p="+page,
                     type: "GET",
                     dataType: "json",
                     success: action
@@ -183,7 +183,7 @@
             }
             function getcomment(pid, action){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php?action=getcomment&pid="+pid+"&token="+token,
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php?action=getcomment&pid="+pid+"&token="+token,
                     type: "GET",
                     dataType: "json",
                     success: action
@@ -191,7 +191,7 @@
             }
             function search(keyword, action){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php",
                     data: "action=search&keywords="+encodeURIComponent(keyword)+"&pagesize=100",
                     type: "POST",
                     dataType: "json",
@@ -200,7 +200,7 @@
             }
             function getone(pid, action) {
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php?action=getone&pid="+pid,
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php?action=getone&pid="+pid,
                     type: "GET",
                     dataType: "json",
                     success: action
@@ -208,7 +208,7 @@
             }
             function loginrequest(username, password, action){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/login/login.php",
+                    url: "http://pkuhelper.pku.edu.cn/services/login/login.php",
                     data: "uid="+encodeURIComponent(username)+"&password="+encodeURIComponent(password)+"&platform=Android",
                     type: "POST",
                     dataType: "json",
@@ -220,7 +220,7 @@
                     return;
                 }
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php",
                     data: "action=getattention&token="+token,
                     type: "POST",
                     dataType: "json",
@@ -229,7 +229,7 @@
             }
             function dopost_text(text){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php",
                     data: "action=dopost&token="+token+"&type=text&text="+encodeURIComponent(text),
                     type: "POST",
                     dataType: "json",
@@ -238,7 +238,7 @@
             }
             function dopost_image(text, image){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php",
                     data: "action=dopost&token="+token+"&type=image&text="+encodeURIComponent(text)+"&data="+image,
                     type: "POST",
                     dataType: "json",
@@ -247,7 +247,7 @@
             }
             function docomment_pt(pid, text){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php",
                     data: "action=docomment&token="+token+"&pid="+pid+"&text="+encodeURIComponent(text),
                     type: "POST",
                     dataType: "json",
@@ -256,7 +256,7 @@
             }
             function setattention(pid, attention){
                 $.ajax({
-                    url: "http://www.pkuhelper.com/services/pkuhole/api.php",
+                    url: "http://pkuhelper.pku.edu.cn/services/pkuhole/api.php",
                     data: "action=attention&pid="+pid+"&switch="+attention+"&token="+token,
                     type: "POST",
                     dataType: "json"
@@ -330,14 +330,14 @@
                     if(data[i].type == "image") {
                         var image = document.createElement('img');
                         image.setAttribute("class", "ui small image");
-                        image.setAttribute("src", "http://www.pkuhelper.com/services/pkuhole/images/"+data[i].url);
+                        image.setAttribute("src", "http://pkuhelper.pku.edu.cn/services/pkuhole/images/"+data[i].url);
                         var br = document.createElement('br');
                         title.appendChild(image);
                         title.appendChild(br);
                     }
                     if(data[i].type == "audio") {
                         var audio = document.createElement('a');
-                        audio.setAttribute("src", "http://www.pkuhelper.com/services/pkuhole/audios/"+data[i].url);
+                        audio.setAttribute("src", "http://pkuhelper.pku.edu.cn/services/pkuhole/audios/"+data[i].url);
                         audio.setAttribute("controls", "controls");
                         audio.setAttribute("type", "audio/amr");
                         var br = document.createElement('br');
